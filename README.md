@@ -57,27 +57,6 @@ The presentation includes three live audio tools built with the **Web Audio API*
 
 > **Note:** Microphone features require HTTPS or `localhost` and browser permission.
 
----
-
-## Deployment
-
-This is a single `index.html` file with no build step, no dependencies, and no external assets beyond Google Fonts.
-
-### GitHub Pages
-
-1. Clone or fork this repository
-2. Ensure `index.html` is in the repository root
-3. Go to **Settings → Pages**
-4. Set source to **Deploy from a branch**, select `main` and `/ (root)`
-5. Your site will be live at `https://yourusername.github.io/repo-name/`
-
-### Local Preview
-
-```bash
-# Any static server works
-python3 -m http.server 8000
-# Then open http://localhost:8000
-```
 
 ---
 
