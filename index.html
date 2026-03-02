@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Musical Time-Stretching & Pitch-Shifting — An Interactive Exploration</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #0a0b0f;
+  --bg-panel: #12141c;
+  --bg-card: #1a1d2a;
+  --bg-equation: #0f1118;
+  --accent-gold: #d4a853;
+  --accent-copper: #c27a4f;
+  --accent-teal: #3db8a0;
+  --accent-blue: #4a8fe7;
+  --accent-purple: #8b6ccf;
+  --accent-rose: #c76a8a;
+  --text-primary: #e8e4dc;
+  --text-secondary: #9a968e;
+  --text-dim: #5e5b54;
+  --border-subtle: rgba(212, 168, 83, 0.12);
+  --border-medium: rgba(212, 168, 83, 0.25);
+  --glow-gold: rgba(212, 168, 83, 0.15);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Source Sans 3', sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  line-height: 1.7;
+  font-weight: 400;
+  overflow-x: hidden;
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--accent-gold); border-radius: 3px; }
+
+/* --- Navigation --- */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10, 11, 15, 0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0 2rem;
+}
+nav .nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+}
+nav .logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem; color: var(--accent-gold);
+  letter-spacing: 0.02em;
+}
+nav .nav-links { display: flex; gap: 1.5rem; }
+nav .nav-links a {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--text-secondary); text-decoration: none;
+  transition: color 0.3s;
+}
+nav .nav-links a:hover { color: var(--accent-gold); }
+
+/* --- Hero --- */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  text-align: center; padding: 6rem 2rem 4rem;
+  position: relative; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 40% at 50% 40%, rgba(212,168,83,0.06), transparent),
+    radial-gradient(ellipse 40% 50% at 20% 60%, rgba(61,184,160,0.04), transparent),
+    radial-gradient(ellipse 40% 50% at 80% 60%, rgba(139,108,207,0.04), transparent);
+}
+.hero h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  color: var(--text-primary); line-height: 1.15;
+  max-width: 900px; position: relative;
+}
+.hero h1 em {
+  font-style: italic; color: var(--accent-gold);
+}
+.hero .subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.85rem; color: var(--text-secondary);
+  margin-top: 1.5rem; letter-spacing: 0.08em;
+  text-transform: uppercase; position: relative;
+}
+.hero .intro-text {
+  max-width: 640px; margin-top: 2.5rem;
+  font-size: 1.1rem; color: var(--text-secondary);
+  line-height: 1.8; position: relative;
+}
+
+/* --- Sections --- */
+.section {
+  max-width: 1100px; margin: 0 auto;
+  padding: 5rem 2rem;
+}
+.section-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.18em; color: var(--accent-gold);
+  margin-bottom: 0.75rem;
+}
+.section-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+  color: var(--text-primary); margin-bottom: 1.5rem;
+  line-height: 1.2;
+}
+.section-text {
+  font-size: 1.05rem; color: var(--text-secondary);
+  max-width: 720px; line-height: 1.85;
+}
+
+/* --- Timeline --- */
+.timeline { position: relative; margin: 3rem 0; padding-left: 2.5rem; }
+.timeline::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px; background: linear-gradient(to bottom, var(--accent-gold), var(--accent-teal), var(--accent-purple));
+}
+.timeline-entry {
+  position: relative; margin-bottom: 2.5rem;
+  padding: 1.5rem 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.timeline-entry:hover {
+  border-color: var(--border-medium);
+  transform: translateX(4px);
+}
+.timeline-entry::before {
+  content: ''; position: absolute; left: -2.85rem; top: 1.8rem;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--accent-gold);
+  box-shadow: 0 0 12px var(--glow-gold);
+}
+.timeline-year {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem; color: var(--accent-gold);
+  letter-spacing: 0.1em; margin-bottom: 0.35rem;
+}
+.timeline-heading {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.25rem; margin-bottom: 0.5rem;
+}
+.timeline-text {
+  font-size: 0.95rem; color: var(--text-secondary); line-height: 1.75;
+}
+
+/* --- Equation Boxes --- */
+.equation-block {
+  margin: 2.5rem 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.equation-header {
+  padding: 0.75rem 1.5rem;
+  background: rgba(212, 168, 83, 0.08);
+  border-bottom: 1px solid var(--border-subtle);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.14em; color: var(--accent-gold);
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+}
+.equation-header .toggle-icon { transition: transform 0.3s; }
+.equation-header.open .toggle-icon { transform: rotate(180deg); }
+.equation-math {
+  padding: 2rem 2.5rem;
+  background: var(--bg-equation);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 1.1rem;
+  text-align: center;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  overflow-x: auto;
+}
+.equation-math .eq-main {
+  font-size: 1.3rem; margin: 0.5rem 0;
+  color: #fff;
+}
+.equation-symbols {
+  padding: 1.5rem 2rem;
+  display: none;
+}
+.equation-symbols.visible { display: block; }
+.symbol-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+.symbol-item {
+  display: flex; align-items: baseline; gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+.symbol-item .sym {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.95rem; color: var(--accent-teal);
+  min-width: 60px; flex-shrink: 0;
+  font-weight: 600;
+}
+.symbol-item .desc {
+  font-size: 0.88rem; color: var(--text-secondary); line-height: 1.5;
+}
+
+/* --- Algorithm Cards --- */
+.algo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem; margin: 2.5rem 0;
+}
+.algo-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px; padding: 2rem;
+  transition: border-color 0.3s, transform 0.3s;
+}
+.algo-card:hover {
+  border-color: var(--border-medium);
+  transform: translateY(-3px);
+}
+.algo-card .algo-domain {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem; text-transform: uppercase;
+  letter-spacing: 0.16em; margin-bottom: 0.5rem;
+}
+.algo-card .algo-domain.time { color: var(--accent-teal); }
+.algo-card .algo-domain.freq { color: var(--accent-purple); }
+.algo-card .algo-domain.hybrid { color: var(--accent-copper); }
+.algo-card .algo-domain.neural { color: var(--accent-rose); }
+.algo-card h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.3rem; margin-bottom: 0.75rem;
+}
+.algo-card p {
+  font-size: 0.92rem; color: var(--text-secondary); line-height: 1.7;
+}
+.algo-card .quality-bar {
+  margin-top: 1rem; height: 3px;
+  background: rgba(255,255,255,0.06); border-radius: 2px;
+  overflow: hidden;
+}
+.algo-card .quality-bar .fill {
+  height: 100%; border-radius: 2px;
+  transition: width 1s ease;
+}
+
+/* --- Interactive Audio Demo --- */
+.audio-demo-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 2rem;
+  margin: 2.5rem 0;
+}
+.audio-demo-panel h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem; margin-bottom: 0.5rem;
+}
+.audio-demo-panel .demo-desc {
+  font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;
+}
+.controls-row {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  align-items: center; margin-bottom: 1.5rem;
+}
+.control-group { display: flex; flex-direction: column; gap: 0.35rem; }
+.control-group label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--text-secondary);
+}
+.control-group input[type="range"] {
+  -webkit-appearance: none; width: 200px; height: 4px;
+  background: rgba(255,255,255,0.1); border-radius: 2px;
+  outline: none;
+}
+.control-group input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: var(--accent-gold);
+  cursor: pointer; border: 2px solid var(--bg-deep);
+}
+.control-group .value-display {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.8rem; color: var(--accent-gold);
+}
+
+button.action-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.1em; padding: 0.7rem 1.5rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px; background: transparent;
+  color: var(--accent-gold); cursor: pointer;
+  transition: all 0.3s;
+}
+button.action-btn:hover {
+  background: rgba(212, 168, 83, 0.1);
+  border-color: var(--accent-gold);
+}
+button.action-btn.active {
+  background: var(--accent-gold);
+  color: var(--bg-deep);
+}
+button.action-btn:disabled {
+  opacity: 0.3; cursor: not-allowed;
+}
+
+.waveform-canvas {
+  width: 100%; height: 120px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px; margin: 1rem 0;
+  background: var(--bg-equation);
+}
+
+.spectrogram-canvas {
+  width: 100%; height: 160px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px; margin: 1rem 0;
+  background: var(--bg-equation);
+}
+
+/* --- Visualization Panel --- */
+.viz-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 2rem;
+  margin: 2.5rem 0;
+}
+
+/* --- Future Section --- */
+.future-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem; margin: 2rem 0;
+}
+.future-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px; padding: 1.75rem;
+}
+.future-card .future-icon {
+  font-size: 1.5rem; margin-bottom: 0.75rem;
+}
+.future-card h4 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.15rem; margin-bottom: 0.5rem;
+}
+.future-card p {
+  font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;
+}
+
+/* --- Separator --- */
+.sep {
+  max-width: 1100px; margin: 0 auto;
+  height: 1px; background: var(--border-subtle);
+}
+
+/* --- Tab System --- */
+.tab-header {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 2rem; overflow-x: auto;
+}
+.tab-btn {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem; text-transform: uppercase;
+  letter-spacing: 0.1em; padding: 0.75rem 1.5rem;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--text-dim); cursor: pointer;
+  transition: all 0.3s; white-space: nowrap;
+}
+.tab-btn:hover { color: var(--text-secondary); }
+.tab-btn.active {
+  color: var(--accent-gold);
+  border-bottom-color: var(--accent-gold);
+}
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  nav .nav-links { display: none; }
+  .section { padding: 3rem 1.25rem; }
+  .controls-row { flex-direction: column; align-items: stretch; }
+  .control-group input[type="range"] { width: 100%; }
+  .symbol-grid { grid-template-columns: 1fr; }
+}
+
+/* --- Diagram --- */
+.diagram-container {
+  display: flex; justify-content: center;
+  margin: 2rem 0; overflow-x: auto;
+}
+.flow-diagram {
+  display: flex; align-items: center; gap: 0;
+  padding: 1.5rem; min-width: max-content;
+}
+.flow-block {
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--border-medium);
+  border-radius: 6px; text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.78rem; color: var(--text-primary);
+  background: var(--bg-equation);
+  min-width: 100px;
+}
+.flow-arrow {
+  color: var(--accent-gold); font-size: 1.2rem;
+  padding: 0 0.5rem;
+}
+
+/* --- Highlight Tag --- */
+.tag {
+  display: inline-block; padding: 0.15rem 0.5rem;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem; border-radius: 3px;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-left: 0.5rem;
+}
+.tag.pro { background: rgba(61,184,160,0.15); color: var(--accent-teal); }
+.tag.con { background: rgba(199,106,138,0.15); color: var(--accent-rose); }
+.tag.info { background: rgba(74,143,231,0.15); color: var(--accent-blue); }
+
+/* Status indicator */
+.status-dot {
+  display: inline-block; width: 8px; height: 8px;
+  border-radius: 50%; margin-right: 0.5rem;
+}
+.status-dot.recording { background: #e74c3c; animation: pulse 1s infinite; }
+.status-dot.ready { background: var(--accent-teal); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.footnote {
+  font-size: 0.82rem; color: var(--text-dim);
+  font-style: italic; margin-top: 2rem;
+  padding-top: 1rem; border-top: 1px solid var(--border-subtle);
+}
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-inner">
+    <div class="logo">TS&PS</div>
+    <div class="nav-links">
+      <a href="#history">History</a>
+      <a href="#fundamentals">Fundamentals</a>
+      <a href="#algorithms">Algorithms</a>
+      <a href="#mathematics">Mathematics</a>
+      <a href="#demo">Demo</a>
+      <a href="#future">Future</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>Musical <em>Time-Stretching</em> & <em>Pitch-Shifting</em></h1>
+  <div class="subtitle">An Interactive Exploration of Audio Manipulation</div>
+  <p class="intro-text">
+    From magnetic tape splicing in the 1940s to neural network vocoders today, 
+    the ability to independently control the pitch and duration of sound has 
+    transformed music production, broadcasting, and creative expression. 
+    This presentation explores the history, mathematics, algorithms, and 
+    future of these fundamental audio processing techniques.
+  </p>
+</section>
+
+<div class="sep"></div>
+
+<!-- ======================= HISTORY ======================= -->
+<section class="section" id="history">
+  <div class="section-label">Chapter I</div>
+  <div class="section-title">A History of Bending Sound</div>
+  <p class="section-text" style="margin-bottom: 2rem;">
+    The journey from mechanical speed changes to AI-driven audio synthesis spans 
+    nearly a century of innovation. What began as crude tape manipulation evolved 
+    through digital signal processing into today's near-transparent transformations.
+  </p>
+
+  <div class="timeline">
+    <div class="timeline-entry">
+      <div class="timeline-year">1940s–1950s</div>
+      <div class="timeline-heading">The Tape Era: Varispeed</div>
+      <p class="timeline-text">
+        Early reel-to-reel tape machines offered the simplest form of pitch manipulation: 
+        changing playback speed. Recording at a slow speed and playing back faster raised 
+        both pitch and tempo together. Les Paul was a pioneer, using tape recorders to punch in, 
+        double-track, and change pitch. Ross Bagdasarian exploited this to create 
+        "The Chipmunks" in 1958 — recording vocals at half-speed and playing back at 
+        double speed for the iconic squeaky voices.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">1960s</div>
+      <div class="timeline-heading">Beatles & Creative Varispeed</div>
+      <p class="timeline-text">
+        The Beatles and their engineer Geoff Emerick elevated varispeed into an art form. 
+        George Martin's piano solo on "In My Life" (1965) was recorded at half-speed and played 
+        back at normal speed, creating an impossibly fast baroque performance. "Strawberry 
+        Fields Forever" (1967) famously spliced two takes recorded at different tempos and 
+        pitches — Emerick matched them by adjusting the speed of the slower take. "Rain" was 
+        recorded at a faster speed then slowed down for mixing, giving Lennon's voice a 
+        distinctive lethargic quality.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">1966</div>
+      <div class="timeline-heading">The Phase Vocoder Is Born</div>
+      <p class="timeline-text">
+        J.L. Flanagan and R.M. Golden at Bell Laboratories published the foundational paper on 
+        the phase vocoder — an algorithm that uses the Short-Time Fourier Transform (STFT) to 
+        analyse and resynthesize audio in the frequency domain. Originally conceived for speech 
+        compression, the phase vocoder would become the most important mathematical framework 
+        for independent time and pitch manipulation. Also in the 1960s, rotary tape-head devices 
+        like the Eltro "Information Rate Changer" (famously used for HAL 9000's voice in 
+        <em>2001: A Space Odyssey</em>) offered early mechanical time-stretching.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">1975</div>
+      <div class="timeline-heading">The Eventide H910 Harmonizer</div>
+      <p class="timeline-text">
+        Designed by Tony Agnello at Eventide, the H910 was the world's first commercially 
+        available digital pitch-shifter. Using a dual-tap delay architecture with triangle-wave 
+        crossfading, it could shift pitch in real-time. TV stations used it to correct the 
+        chipmunk voices caused by speeding up reruns for extra ad time. Musicians embraced 
+        both its clean shifting and its distinctive glitchy artifacts — some lamented when 
+        the improved H949 (1977) removed those glitches. Jon Anderson of Yes was the first 
+        artist to use the Harmonizer on his album <em>Olias of Sunhillow</em> (1976).
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">1976–1986</div>
+      <div class="timeline-heading">Digital Phase Vocoder Implementations</div>
+      <p class="timeline-text">
+        Michael Portnoff (1976) showed how the phase vocoder could be implemented digitally using 
+        the FFT, opening the door to practical software implementations. Mark Dolson's influential 
+        1986 tutorial brought the technique to the computer music community. Meanwhile, the French 
+        company Publison released the "Infernal Machine 90" — a hybrid digital signal processor 
+        capable of pitch shifting, delay, reverb, and sample manipulation.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">1988–1990</div>
+      <div class="timeline-heading">PSOLA: A Time-Domain Revolution</div>
+      <p class="timeline-text">
+        Charpentier and Stella (1988) introduced Pitch-Synchronous Overlap and Add (PSOLA), 
+        and Moulines and Charpentier refined TD-PSOLA (1990). Unlike frequency-domain methods, 
+        TD-PSOLA works directly on the waveform by identifying pitch periods and rearranging 
+        them. This approach naturally preserves formants (the resonance characteristics of a 
+        voice), avoiding the "Chipmunk effect" that plagues simple resampling.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">1997–1999</div>
+      <div class="timeline-heading">Auto-Tune & Phase Vocoder Breakthroughs</div>
+      <p class="timeline-text">
+        Andy Hildebrand's Auto-Tune (1997) revolutionised pitch correction for vocals. In 1999, 
+        Laroche and Dolson published their landmark improvement to the phase vocoder, introducing 
+        phase-locking to maintain vertical coherence between frequency bins. This dramatically 
+        improved the quality of time-stretching, resolving the "phasiness" that had plagued 
+        earlier implementations for over three decades.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">2001–2010s</div>
+      <div class="timeline-heading">DAW Integration & Commercial Algorithms</div>
+      <p class="timeline-text">
+        Ableton Live (2001) and other DAWs integrated time-stretching and pitch-shifting as 
+        core features. Companies like zplane developed commercial algorithms (élastique) used 
+        behind the scenes in most major DAWs. These combined multiple techniques — separating 
+        signals into sinusoidal and transient components, or using wavelet transforms — to 
+        achieve high-quality results across all types of audio material.
+      </p>
+    </div>
+
+    <div class="timeline-entry">
+      <div class="timeline-year">2020–Present</div>
+      <div class="timeline-heading">Neural Audio Synthesis & DDSP</div>
+      <p class="timeline-text">
+        Google Magenta's DDSP (Differentiable Digital Signal Processing) combined neural 
+        networks with classical DSP modules, enabling high-quality timbre transfer with 
+        minimal training data. The DDSP-VST plugin (2022) brought this to DAWs. More recent 
+        work includes RAVE (Caillon & Esling, 2021) using variational autoencoders, and 
+        diffusion-based models like AFTER for near-lossless audio transformation. These 
+        approaches promise to make the distinction between "time-stretching" and 
+        "resynthesis" increasingly blurred.
+      </p>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ======================= FUNDAMENTALS ======================= -->
+<section class="section" id="fundamentals">
+  <div class="section-label">Chapter II</div>
+  <div class="section-title">The Fundamental Problem</div>
+  <p class="section-text" style="margin-bottom: 1.5rem;">
+    In the physical world, pitch and duration are inextricably linked. A guitar string 
+    vibrating faster produces both a higher pitch and shorter period. A record spinning 
+    faster sounds higher <em>and</em> plays quicker. The central challenge of time-stretching 
+    and pitch-shifting is to decouple these two properties that nature has bound together.
+  </p>
+  <p class="section-text" style="margin-bottom: 2rem;">
+    <strong>Time-stretching</strong> changes duration without affecting pitch. 
+    <strong>Pitch-shifting</strong> changes pitch without affecting duration. 
+    These are related operations: pitch-shifting is typically achieved by 
+    time-stretching followed by resampling (or vice versa).
+  </p>
+
+  <div class="diagram-container">
+    <div class="flow-diagram">
+      <div class="flow-block">Input<br>Signal</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-block" style="border-color: var(--accent-teal);">Time<br>Stretch</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-block" style="border-color: var(--accent-purple);">Resample</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-block">Pitch-Shifted<br>Output</div>
+    </div>
+  </div>
+
+  <p class="section-text">
+    To pitch-shift up by a factor α: first time-stretch the signal to be α times longer, 
+    then resample at α times the rate. The signal returns to its original duration but 
+    all frequencies are multiplied by α. To shift down, stretch shorter and resample slower.
+  </p>
+
+  <!-- Key Equation: Resampling Relationship -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>Pitch-Shifting via Time-Stretch + Resample</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">y[n] = TSM{ x[n], α } resampled at rate α</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        Pitch shift factor α &gt; 1 → higher pitch &nbsp;|&nbsp; α &lt; 1 → lower pitch
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">x[n]</span><span class="desc">Original discrete-time audio signal</span></div>
+        <div class="symbol-item"><span class="sym">y[n]</span><span class="desc">Pitch-shifted output signal</span></div>
+        <div class="symbol-item"><span class="sym">TSM{}</span><span class="desc">Time-scale modification function</span></div>
+        <div class="symbol-item"><span class="sym">α</span><span class="desc">Pitch-shift ratio (e.g. 1.5 = perfect fifth up)</span></div>
+        <div class="symbol-item"><span class="sym">n</span><span class="desc">Discrete sample index</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ======================= ALGORITHMS ======================= -->
+<section class="section" id="algorithms">
+  <div class="section-label">Chapter III</div>
+  <div class="section-title">Implementation Approaches</div>
+  <p class="section-text" style="margin-bottom: 2rem;">
+    Algorithms for time-stretching and pitch-shifting fall into four broad families: 
+    time-domain methods that manipulate the waveform directly, frequency-domain methods 
+    built on the STFT, hybrid approaches that combine both, and modern neural methods.
+  </p>
+
+  <div class="tab-header">
+    <button class="tab-btn active" onclick="switchTab(event, 'tab-time')">Time Domain</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-freq')">Frequency Domain</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-hybrid')">Hybrid</button>
+    <button class="tab-btn" onclick="switchTab(event, 'tab-neural')">Neural / AI</button>
+  </div>
+
+  <!-- Time Domain Tab -->
+  <div class="tab-content active" id="tab-time">
+    <div class="algo-grid">
+      <div class="algo-card">
+        <div class="algo-domain time">Time Domain</div>
+        <h3>OLA — Overlap-Add</h3>
+        <p>
+          The simplest approach. The signal is split into overlapping frames, which are 
+          repositioned (closer together or further apart) and crossfaded. Spacing frames 
+          further apart stretches the signal; closer together compresses it. Simple but 
+          produces phase discontinuities and "flanging" artifacts with polyphonic material.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:40%; background: var(--accent-teal);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain time">Time Domain</div>
+        <h3>SOLA — Synchronised OLA</h3>
+        <p>
+          Improves on OLA by using cross-correlation to find the optimal overlap position 
+          for each frame, minimising phase discontinuities. SOLA calculates the best alignment 
+          point within a search region, producing much cleaner results. Typical processing 
+          latency is around 100 milliseconds.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:55%; background: var(--accent-teal);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain time">Time Domain</div>
+        <h3>TD-PSOLA</h3>
+        <p>
+          Pitch-Synchronous Overlap-Add uses pitch detection to identify individual pitch 
+          periods in the waveform, then rearranges windows centred on these periods. Shifting 
+          windows closer raises pitch; further apart lowers it. Naturally preserves formants, 
+          avoiding the "chipmunk effect." Excellent for monophonic voice, but requires accurate 
+          pitch detection and struggles with polyphonic material.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:70%; background: var(--accent-teal);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frequency Domain Tab -->
+  <div class="tab-content" id="tab-freq">
+    <div class="algo-grid">
+      <div class="algo-card">
+        <div class="algo-domain freq">Frequency Domain</div>
+        <h3>Phase Vocoder</h3>
+        <p>
+          The workhorse of audio time-stretching. Uses the STFT to decompose audio into 
+          overlapping spectral frames. Time-stretching is achieved by changing the hop size 
+          between analysis and synthesis frames while adjusting phases to maintain horizontal 
+          coherence. Laroche & Dolson's 1999 phase-locking improvement was a watershed moment 
+          for quality. Works on polyphonic material but can produce "phasiness" and smear 
+          transients.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:75%; background: var(--accent-purple);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain freq">Frequency Domain</div>
+        <h3>Sinusoidal Modelling</h3>
+        <p>
+          Identifies spectral peaks across STFT frames and connects them into sinusoidal 
+          "tracks." These tracks can be independently resynthesized at any time scale. More 
+          computationally expensive but yields excellent results on both polyphonic and 
+          percussive material, especially when the signal is separated into sub-bands.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:80%; background: var(--accent-purple);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain freq">Frequency Domain</div>
+        <h3>Constant-Q Transform</h3>
+        <p>
+          Uses a frequency-domain representation with logarithmically-spaced bins matching 
+          musical pitch perception. Unlike the linear spacing of the FFT, this aligns directly 
+          with musical semitones, making pitch manipulation more natural. However, perfect 
+          reconstruction is more complex than with the standard STFT.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:65%; background: var(--accent-purple);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hybrid Tab -->
+  <div class="tab-content" id="tab-hybrid">
+    <div class="algo-grid">
+      <div class="algo-card">
+        <div class="algo-domain hybrid">Hybrid</div>
+        <h3>Transient + Sinusoidal Separation</h3>
+        <p>
+          High-end commercial algorithms (like zplane's élastique) separate the signal into 
+          transient and sinusoidal components. Transients are handled in the time domain to 
+          preserve their sharp attack character, while sustained sinusoidal content is processed 
+          via the phase vocoder. This avoids the smeared transients that plague pure 
+          frequency-domain methods.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:90%; background: var(--accent-copper);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain hybrid">Hybrid</div>
+        <h3>Adaptive Wavelet Methods</h3>
+        <p>
+          Zynaptiq's ZTX technology uses adaptive wavelet transforms that provide high 
+          localisation in both time and frequency domains simultaneously. This overcomes the 
+          fundamental time-frequency resolution trade-off inherent to fixed-window STFT methods 
+          (the Heisenberg/Gabor uncertainty principle for signals).
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:92%; background: var(--accent-copper);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain hybrid">Hybrid</div>
+        <h3>PVSOLA</h3>
+        <p>
+          Phase Vocoder with Synchronised Overlap-Add combines phase vocoder spectral 
+          processing with SOLA's waveform-level synchronisation. The phase vocoder handles 
+          sinusoidal components while SOLA-style overlap matching ensures proper alignment, 
+          producing improved results for polyphonic material.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:82%; background: var(--accent-copper);"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Neural Tab -->
+  <div class="tab-content" id="tab-neural">
+    <div class="algo-grid">
+      <div class="algo-card">
+        <div class="algo-domain neural">Neural / AI</div>
+        <h3>DDSP — Differentiable DSP</h3>
+        <p>
+          Google Magenta's approach uses a neural autoencoder where the decoder controls 
+          classical DSP modules (harmonic synthesizer, noise filter, reverb) rather than 
+          generating waveforms directly. An RNN extracts f₀ and loudness contours, and the 
+          decoder predicts synthesis parameters. Requires only minutes of training data but 
+          is limited to monophonic signals. The DDSP-VST plugin enabled real-time use in DAWs.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:85%; background: var(--accent-rose);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain neural">Neural / AI</div>
+        <h3>RAVE — Realtime Audio Variational autoEncoder</h3>
+        <p>
+          Replaces RNNs with causal CNNs, enabling faster training and 48kHz synthesis with 
+          improved timbre modelling. The variational autoencoder with discriminator training 
+          produces higher fidelity with similar data efficiency to DDSP. Supports real-time 
+          performance with low-latency inference.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:88%; background: var(--accent-rose);"></div></div>
+      </div>
+
+      <div class="algo-card">
+        <div class="algo-domain neural">Neural / AI</div>
+        <h3>CLPCNet & Diffusion Models</h3>
+        <p>
+          Controllable LPCNet extends neural vocoders for explicit pitch-shifting and 
+          time-stretching control. Diffusion-based models like AFTER combine diffusion 
+          principles with neural audio coding for near-lossless timbre transfer, though 
+          at higher computational cost. These represent the cutting edge of neural audio 
+          manipulation.
+        </p>
+        <div class="quality-bar"><div class="fill" style="width:90%; background: var(--accent-rose);"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ======================= MATHEMATICS ======================= -->
+<section class="section" id="mathematics">
+  <div class="section-label">Chapter IV</div>
+  <div class="section-title">The Mathematics in Detail</div>
+  <p class="section-text" style="margin-bottom: 2rem;">
+    The mathematical framework underpinning modern time-stretching and pitch-shifting 
+    centres on the Short-Time Fourier Transform, phase propagation, and overlap-add 
+    reconstruction. Here we examine the key equations in depth.
+  </p>
+
+  <!-- Equation 1: STFT -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>1 · The Short-Time Fourier Transform (STFT)</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">X(m, ω) = Σₙ x[n] · w[n − mRₐ] · e<sup>−jωn</sup></div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        Windowed DFT computed at successive analysis positions mRₐ
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">X(m, ω)</span><span class="desc">Complex spectral coefficient at time frame m and frequency ω</span></div>
+        <div class="symbol-item"><span class="sym">x[n]</span><span class="desc">Input discrete-time audio signal</span></div>
+        <div class="symbol-item"><span class="sym">w[n]</span><span class="desc">Analysis window function (e.g. Hann window), typically N samples long</span></div>
+        <div class="symbol-item"><span class="sym">m</span><span class="desc">Frame index (m = 0, 1, 2, ...)</span></div>
+        <div class="symbol-item"><span class="sym">Rₐ</span><span class="desc">Analysis hop size — the number of samples between consecutive analysis frames</span></div>
+        <div class="symbol-item"><span class="sym">n</span><span class="desc">Sample index within the signal</span></div>
+        <div class="symbol-item"><span class="sym">ω</span><span class="desc">Angular frequency variable (ω = 2πk/N for bin index k)</span></div>
+        <div class="symbol-item"><span class="sym">e<sup>−jωn</sup></span><span class="desc">Complex exponential basis function of the Fourier Transform</span></div>
+        <div class="symbol-item"><span class="sym">j</span><span class="desc">Imaginary unit (j² = −1)</span></div>
+        <div class="symbol-item"><span class="sym">N</span><span class="desc">FFT size (number of frequency bins, typically 1024–8192)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equation 2: Amplitude/Phase decomposition -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>2 · Amplitude–Phase Decomposition</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">X(m, ω) = |X(m, ω)| · e<sup>jφ(m, ω)</sup></div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        where &nbsp; |X| = √(Re² + Im²) &nbsp;and&nbsp; φ = atan2(Im, Re)
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">|X(m,ω)|</span><span class="desc">Magnitude (amplitude) spectrum — how loud each frequency is</span></div>
+        <div class="symbol-item"><span class="sym">φ(m, ω)</span><span class="desc">Phase spectrum — the position within the cycle of each sinusoidal component</span></div>
+        <div class="symbol-item"><span class="sym">Re, Im</span><span class="desc">Real and imaginary parts of the complex STFT coefficient</span></div>
+        <div class="symbol-item"><span class="sym">atan2</span><span class="desc">Four-quadrant arctangent, giving phase in range (−π, π]</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equation 3: Phase Vocoder Time-Stretching -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>3 · Phase Vocoder: Time-Stretch Phase Propagation</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">Δφ(m, ω) = φ(m, ω) − φ(m−1, ω) − ωRₐ</div>
+      <div style="margin-top: 0.75rem; font-size: 1rem;">
+        Δφ_wrapped = Δφ − 2π · round(Δφ / 2π)
+      </div>
+      <div style="margin-top: 0.75rem; font-size: 1rem;">
+        ω_true = ω + Δφ_wrapped / Rₐ
+      </div>
+      <div style="margin-top: 0.75rem; font-size: 1.15rem; color: var(--accent-gold);">
+        φₛ(m, ω) = φₛ(m−1, ω) + ω_true · Rₛ
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        Core phase propagation equations of the phase vocoder
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">Δφ(m,ω)</span><span class="desc">Phase difference between consecutive frames at frequency ω, minus the expected phase advance</span></div>
+        <div class="symbol-item"><span class="sym">φ(m,ω)</span><span class="desc">Measured analysis phase at frame m, frequency ω</span></div>
+        <div class="symbol-item"><span class="sym">ωRₐ</span><span class="desc">Expected phase advance for a sinusoid at bin frequency ω over one analysis hop</span></div>
+        <div class="symbol-item"><span class="sym">Δφ_wrapped</span><span class="desc">Phase deviation wrapped to the range [−π, π] — captures the true instantaneous frequency offset</span></div>
+        <div class="symbol-item"><span class="sym">round()</span><span class="desc">Nearest-integer rounding function, used to unwrap the phase modulo 2π</span></div>
+        <div class="symbol-item"><span class="sym">ω_true</span><span class="desc">Estimated true instantaneous frequency of the sinusoidal component in this bin</span></div>
+        <div class="symbol-item"><span class="sym">Rₐ</span><span class="desc">Analysis hop size (samples between input frames)</span></div>
+        <div class="symbol-item"><span class="sym">Rₛ</span><span class="desc">Synthesis hop size (samples between output frames). The ratio Rₛ/Rₐ = time-stretch factor</span></div>
+        <div class="symbol-item"><span class="sym">φₛ(m,ω)</span><span class="desc">Synthesis phase — the adjusted phase used for output frame m. Propagated from the previous frame using the true frequency and synthesis hop.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equation 4: Inverse STFT / OLA Reconstruction -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>4 · Overlap-Add Reconstruction (Inverse STFT)</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">y[n] = Σₘ wₛ[n − mRₛ] · IFFT{ |X(m,ω)| · e<sup>jφₛ(m,ω)</sup> }</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        Time-domain reconstruction by windowed overlap-add of IFFT frames
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">y[n]</span><span class="desc">Reconstructed time-domain output signal</span></div>
+        <div class="symbol-item"><span class="sym">wₛ[n]</span><span class="desc">Synthesis window (often the same shape as the analysis window)</span></div>
+        <div class="symbol-item"><span class="sym">mRₛ</span><span class="desc">Synthesis time position for frame m (spaced by the synthesis hop)</span></div>
+        <div class="symbol-item"><span class="sym">IFFT{}</span><span class="desc">Inverse Fast Fourier Transform — converts modified spectrum back to time domain</span></div>
+        <div class="symbol-item"><span class="sym">|X(m,ω)|</span><span class="desc">Original magnitude spectrum (preserved from analysis)</span></div>
+        <div class="symbol-item"><span class="sym">φₛ(m,ω)</span><span class="desc">Modified synthesis phase (from the phase propagation step)</span></div>
+        <div class="symbol-item"><span class="sym">Σₘ</span><span class="desc">Summation over all synthesis frames — the "overlap-add" operation</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equation 5: Frequency Resolution -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>5 · FFT Frequency Resolution & the Uncertainty Principle</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">Δf = fₛ / N</div>
+      <div style="margin-top: 0.5rem; font-size: 1rem;">
+        Δf · Δt ≥ 1 / (4π) &nbsp;&nbsp;(Gabor limit)
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        You cannot simultaneously achieve arbitrarily precise time and frequency resolution
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">Δf</span><span class="desc">Frequency resolution of the FFT — the spacing between adjacent frequency bins in Hz</span></div>
+        <div class="symbol-item"><span class="sym">fₛ</span><span class="desc">Sampling rate in Hz (e.g. 44100 for CD-quality audio)</span></div>
+        <div class="symbol-item"><span class="sym">N</span><span class="desc">FFT size (window length in samples). Larger N → better frequency resolution but poorer time resolution</span></div>
+        <div class="symbol-item"><span class="sym">Δt</span><span class="desc">Time resolution — determined by the window length. Δt ≈ N/fₛ seconds</span></div>
+        <div class="symbol-item"><span class="sym">1/(4π)</span><span class="desc">The Gabor limit — the theoretical minimum product of time and frequency uncertainties for any signal representation</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equation 6: TD-PSOLA -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>6 · TD-PSOLA Synthesis</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">y[n] = Σₖ hₖ[n − tₖ'] · x[n − tₖ + tₖ']</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        Overlap-add of pitch-period-aligned windows at new synthesis marks
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">y[n]</span><span class="desc">Output signal after pitch modification</span></div>
+        <div class="symbol-item"><span class="sym">x[n]</span><span class="desc">Input signal</span></div>
+        <div class="symbol-item"><span class="sym">tₖ</span><span class="desc">Analysis pitch marks — time positions of detected pitch period boundaries in the input signal</span></div>
+        <div class="symbol-item"><span class="sym">tₖ'</span><span class="desc">Synthesis pitch marks — repositioned time positions in the output. Closer together → higher pitch; further apart → lower pitch</span></div>
+        <div class="symbol-item"><span class="sym">hₖ[n]</span><span class="desc">Windowing function (typically Hann) centred at each synthesis mark, spanning two pitch periods</span></div>
+        <div class="symbol-item"><span class="sym">Σₖ</span><span class="desc">Summation over all pitch-period windows — the overlap-add reconstruction</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Equation 7: SOLA Cross-correlation -->
+  <div class="equation-block">
+    <div class="equation-header" onclick="toggleSymbols(this)">
+      <span>7 · SOLA Cross-Correlation Alignment</span>
+      <span class="toggle-icon">▼</span>
+    </div>
+    <div class="equation-math">
+      <div class="eq-main">Δ_opt = argmax_Δ Σₙ y[n] · x_m[n + Δ]</div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+        for Δ ∈ [−L/2, L/2] within the search region
+      </div>
+    </div>
+    <div class="equation-symbols">
+      <div class="symbol-grid">
+        <div class="symbol-item"><span class="sym">Δ_opt</span><span class="desc">Optimal shift offset that maximises waveform similarity in the overlap region</span></div>
+        <div class="symbol-item"><span class="sym">argmax_Δ</span><span class="desc">"Argument of the maximum" — finds the value of Δ that maximises the cross-correlation</span></div>
+        <div class="symbol-item"><span class="sym">y[n]</span><span class="desc">Already-constructed output signal (the tail end that will be overlapped)</span></div>
+        <div class="symbol-item"><span class="sym">x_m[n]</span><span class="desc">Current analysis frame to be aligned and added</span></div>
+        <div class="symbol-item"><span class="sym">L</span><span class="desc">Width of the search region in samples. Larger L → better matches but more computation</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ======================= INTERACTIVE DEMO ======================= -->
+<section class="section" id="demo">
+  <div class="section-label">Chapter V</div>
+  <div class="section-title">Interactive Audio Laboratory</div>
+  <p class="section-text" style="margin-bottom: 2rem;">
+    Experiment with time-stretching and pitch-shifting in your browser using the Web Audio API.
+    Generate test tones, record your voice, or listen to examples — then apply real-time processing 
+    and hear the results.
+  </p>
+
+  <!-- Tone Generator Demo -->
+  <div class="audio-demo-panel">
+    <h3>Synthesizer & Pitch Shifter</h3>
+    <p class="demo-desc">
+      Generate a tone, then hear it pitch-shifted in real-time using a granular time-domain approach. 
+      Adjust the pitch shift in semitones and the playback speed independently.
+    </p>
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Base Frequency (Hz)</label>
+        <input type="range" id="freqSlider" min="100" max="1000" value="261" step="1"
+               oninput="document.getElementById('freqVal').textContent = this.value + ' Hz'">
+        <span class="value-display" id="freqVal">261 Hz</span>
+      </div>
+      <div class="control-group">
+        <label>Waveform</label>
+        <div style="display: flex; gap: 0.5rem; margin-top: 0.25rem;">
+          <button class="action-btn active" onclick="setWaveform('sine', this)">Sine</button>
+          <button class="action-btn" onclick="setWaveform('sawtooth', this)">Saw</button>
+          <button class="action-btn" onclick="setWaveform('square', this)">Square</button>
+          <button class="action-btn" onclick="setWaveform('triangle', this)">Tri</button>
+        </div>
+      </div>
+    </div>
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Pitch Shift (semitones)</label>
+        <input type="range" id="pitchSlider" min="-12" max="12" value="0" step="1"
+               oninput="updatePitchShift(this.value)">
+        <span class="value-display" id="pitchVal">0 st</span>
+      </div>
+      <div class="control-group">
+        <label>Detune (cents)</label>
+        <input type="range" id="detuneSlider" min="-50" max="50" value="0" step="1"
+               oninput="updateDetune(this.value)">
+        <span class="value-display" id="detuneVal">0 ¢</span>
+      </div>
+    </div>
+    <div class="controls-row">
+      <button class="action-btn" id="playToneBtn" onclick="toggleTone()">▶ Play Tone</button>
+      <button class="action-btn" id="playShiftedBtn" onclick="toggleShiftedTone()">▶ Play Shifted</button>
+      <button class="action-btn" onclick="playComparison()">A/B Compare</button>
+    </div>
+    <canvas class="waveform-canvas" id="toneWaveform"></canvas>
+    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+      Live waveform visualisation · Original (gold) vs Shifted (teal)
+    </div>
+  </div>
+
+  <!-- Microphone Recording Demo -->
+  <div class="audio-demo-panel">
+    <h3>Voice Recorder & Processor</h3>
+    <p class="demo-desc">
+      Record a short clip from your microphone, then apply time-stretching and pitch-shifting 
+      to hear the effects on your own voice. Uses a granular overlap-add approach in JavaScript.
+    </p>
+    <div class="controls-row">
+      <button class="action-btn" id="recordBtn" onclick="toggleRecording()">
+        <span class="status-dot ready"></span> Record
+      </button>
+      <button class="action-btn" id="playOrigBtn" onclick="playOriginal()" disabled>▶ Play Original</button>
+      <button class="action-btn" id="playProcBtn" onclick="playProcessed()" disabled>▶ Play Processed</button>
+    </div>
+    <div class="controls-row">
+      <div class="control-group">
+        <label>Time Stretch Factor</label>
+        <input type="range" id="stretchSlider" min="0.5" max="2.0" value="1.0" step="0.05"
+               oninput="document.getElementById('stretchVal').textContent = parseFloat(this.value).toFixed(2) + '×'"
+               disabled>
+        <span class="value-display" id="stretchVal">1.00×</span>
+      </div>
+      <div class="control-group">
+        <label>Pitch Shift (semitones)</label>
+        <input type="range" id="recPitchSlider" min="-12" max="12" value="0" step="1"
+               oninput="document.getElementById('recPitchVal').textContent = this.value + ' st'"
+               disabled>
+        <span class="value-display" id="recPitchVal">0 st</span>
+      </div>
+    </div>
+    <canvas class="waveform-canvas" id="recWaveform"></canvas>
+    <div style="font-size: 0.8rem; color: var(--text-dim); margin-top: 0.5rem;">
+      Recorded audio waveform · Drag sliders then click "Play Processed" to hear results
+    </div>
+  </div>
+
+  <!-- Spectrogram Visualization -->
+  <div class="viz-panel">
+    <h3 style="font-family: 'DM Serif Display', serif; font-size: 1.4rem; margin-bottom: 0.5rem;">
+      Live Spectrogram
+    </h3>
+    <p class="demo-desc">
+      A real-time scrolling spectrogram of the audio output. Frequency is mapped vertically 
+      (low at bottom, high at top), time scrolls left. Colour intensity represents amplitude.
+    </p>
+    <div class="controls-row">
+      <button class="action-btn" id="spectBtn" onclick="toggleSpectrogram()">▶ Start Spectrogram</button>
+    </div>
+    <canvas class="spectrogram-canvas" id="spectrogramCanvas"></canvas>
+  </div>
+</section>
+
+<div class="sep"></div>
+
+<!-- ======================= FUTURE ======================= -->
+<section class="section" id="future">
+  <div class="section-label">Chapter VI</div>
+  <div class="section-title">Future Developments</div>
+  <p class="section-text" style="margin-bottom: 2rem;">
+    The boundary between signal processing and machine learning is dissolving. Several 
+    emerging directions promise to fundamentally reshape how we manipulate audio in time and pitch.
+  </p>
+
+  <div class="future-grid">
+    <div class="future-card">
+      <div class="future-icon">🧠</div>
+      <h4>End-to-End Neural Vocoders</h4>
+      <p>
+        Models like DDSP, RAVE, and emerging diffusion-based architectures are converging 
+        toward systems that can resynthesize any audio with arbitrary pitch and time 
+        modifications while preserving naturalness. Future systems may eliminate the need 
+        for separate analysis-modification-resynthesis pipelines entirely.
+      </p>
+    </div>
+    <div class="future-card">
+      <div class="future-icon">🎸</div>
+      <h4>Polyphonic Neural Pitch Editing</h4>
+      <p>
+        Current DDSP methods are limited to monophonic signals. Research into polyphonic 
+        neural synthesis could enable per-note pitch and timing control within complex 
+        mixtures — imagine adjusting individual notes in a piano chord or the pitch of one 
+        instrument within a full mix.
+      </p>
+    </div>
+    <div class="future-card">
+      <div class="future-icon">⚡</div>
+      <h4>Real-Time On-Device Processing</h4>
+      <p>
+        Optimised architectures like DDSP-CNN-Tiny demonstrate that neural audio synthesis 
+        can run on CPUs in real-time. Future hardware acceleration (dedicated neural DSP chips) 
+        may enable high-quality neural pitch-shifting and time-stretching in embedded devices, 
+        guitar pedals, and mobile phones.
+      </p>
+    </div>
+    <div class="future-card">
+      <div class="future-icon">🎤</div>
+      <h4>Formant-Aware Intelligent Shifting</h4>
+      <p>
+        Rather than naively shifting all frequencies, future systems will model the full vocal 
+        tract and instrument resonance. This means transposing a soprano recording down an 
+        octave could produce a natural alto timbre, not just a slowed-down soprano. 
+        Disentangling pitch, timbre, formants, and expression is an active research frontier.
+      </p>
+    </div>
+    <div class="future-card">
+      <div class="future-icon">🌊</div>
+      <h4>Adaptive Multi-Resolution Analysis</h4>
+      <p>
+        Variable-window and adaptive wavelet methods (pioneered at IRCAM) automatically 
+        adjust time-frequency resolution based on signal content. Future systems will 
+        intelligently switch between fine time resolution for transients and fine frequency 
+        resolution for sustained tones, overcoming the Gabor uncertainty limit in practice.
+      </p>
+    </div>
+    <div class="future-card">
+      <div class="future-icon">🔗</div>
+      <h4>Differentiable Everything</h4>
+      <p>
+        The DDSP paradigm of making signal processing differentiable extends beyond synthesis. 
+        Future audio tools may use end-to-end differentiable pipelines for mixing, mastering, 
+        and spatial audio, where neural networks learn to control banks of classical DSP 
+        processors. The DAFx 2025 conference already showcased KAN-based filter design and 
+        differentiable biquad estimation within neural frameworks.
+      </p>
+    </div>
+  </div>
+
+  <p class="footnote">
+    This presentation was created for educational purposes. Audio processing uses the Web Audio API 
+    with JavaScript-based granular synthesis. For production use, dedicated DSP libraries and 
+    frameworks will yield higher quality results. References include works by Flanagan & Golden (1966), 
+    Portnoff (1976), Dolson (1986), Moulines & Charpentier (1990), Laroche & Dolson (1999), 
+    Engel et al. (2020), and the Frontiers review by Hayes et al. (2024).
+  </p>
+</section>
+
+<div style="height: 4rem;"></div>
+
+<!-- ======================= SCRIPTS ======================= -->
+<script>
+// ===== Equation Toggle =====
+function toggleSymbols(header) {
+  const block = header.closest('.equation-block');
+  const symbols = block.querySelector('.equation-symbols');
+  const isVisible = symbols.classList.contains('visible');
+  symbols.classList.toggle('visible');
+  header.classList.toggle('open');
+}
+
+// ===== Tab Switching =====
+function switchTab(event, tabId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById(tabId).classList.add('active');
+}
+
+// ===== Audio Context =====
+let audioCtx = null;
+let currentOsc = null;
+let shiftedOsc = null;
+let analyser = null;
+let currentWaveform = 'sine';
+let isPlaying = false;
+let isShiftedPlaying = false;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+// ===== Waveform Selection =====
+function setWaveform(type, btn) {
+  currentWaveform = type;
+  btn.parentElement.querySelectorAll('.action-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (currentOsc) currentOsc.type = type;
+  if (shiftedOsc) shiftedOsc.type = type;
+}
+
+// ===== Pitch Shift Calculation =====
+function getSemitoneRatio(semitones, cents) {
+  return Math.pow(2, (semitones + (cents || 0) / 100) / 12);
+}
+
+function updatePitchShift(val) {
+  document.getElementById('pitchVal').textContent = val + ' st';
+  if (shiftedOsc) {
+    const baseFreq = parseFloat(document.getElementById('freqSlider').value);
+    const cents = parseFloat(document.getElementById('detuneSlider').value);
+    const ratio = getSemitoneRatio(parseFloat(val), cents);
+    shiftedOsc.frequency.setValueAtTime(baseFreq * ratio, audioCtx.currentTime);
+  }
+}
+
+function updateDetune(val) {
+  document.getElementById('detuneVal').textContent = val + ' ¢';
+  if (shiftedOsc) {
+    const baseFreq = parseFloat(document.getElementById('freqSlider').value);
+    const semitones = parseFloat(document.getElementById('pitchSlider').value);
+    const ratio = getSemitoneRatio(semitones, parseFloat(val));
+    shiftedOsc.frequency.setValueAtTime(baseFreq * ratio, audioCtx.currentTime);
+  }
+}
+
+// ===== Play Original Tone =====
+function toggleTone() {
+  const ctx = getAudioContext();
+  const btn = document.getElementById('playToneBtn');
+  if (isPlaying) {
+    currentOsc.stop();
+    currentOsc = null;
+    isPlaying = false;
+    btn.textContent = '▶ Play Tone';
+    btn.classList.remove('active');
+    return;
+  }
+  const freq = parseFloat(document.getElementById('freqSlider').value);
+  const gain = ctx.createGain();
+  gain.gain.value = 0.3;
+  gain.connect(analyser);
+  currentOsc = ctx.createOscillator();
+  currentOsc.type = currentWaveform;
+  currentOsc.frequency.value = freq;
+  currentOsc.connect(gain);
+  currentOsc.start();
+  isPlaying = true;
+  btn.textContent = '■ Stop Tone';
+  btn.classList.add('active');
+  drawWaveform();
+}
+
+// ===== Play Shifted Tone =====
+function toggleShiftedTone() {
+  const ctx = getAudioContext();
+  const btn = document.getElementById('playShiftedBtn');
+  if (isShiftedPlaying) {
+    shiftedOsc.stop();
+    shiftedOsc = null;
+    isShiftedPlaying = false;
+    btn.textContent = '▶ Play Shifted';
+    btn.classList.remove('active');
+    return;
+  }
+  const baseFreq = parseFloat(document.getElementById('freqSlider').value);
+  const semitones = parseFloat(document.getElementById('pitchSlider').value);
+  const cents = parseFloat(document.getElementById('detuneSlider').value);
+  const ratio = getSemitoneRatio(semitones, cents);
+  const gain = ctx.createGain();
+  gain.gain.value = 0.3;
+  gain.connect(analyser);
+  shiftedOsc = ctx.createOscillator();
+  shiftedOsc.type = currentWaveform;
+  shiftedOsc.frequency.value = baseFreq * ratio;
+  shiftedOsc.connect(gain);
+  shiftedOsc.start();
+  isShiftedPlaying = true;
+  btn.textContent = '■ Stop Shifted';
+  btn.classList.add('active');
+  drawWaveform();
+}
+
+// ===== A/B Comparison =====
+function playComparison() {
+  const ctx = getAudioContext();
+  const baseFreq = parseFloat(document.getElementById('freqSlider').value);
+  const semitones = parseFloat(document.getElementById('pitchSlider').value);
+  const cents = parseFloat(document.getElementById('detuneSlider').value);
+  const ratio = getSemitoneRatio(semitones, cents);
+
+  // Play original for 1s, then shifted for 1s
+  const g1 = ctx.createGain();
+  g1.gain.value = 0.3;
+  g1.connect(analyser);
+  const o1 = ctx.createOscillator();
+  o1.type = currentWaveform;
+  o1.frequency.value = baseFreq;
+  o1.connect(g1);
+  o1.start(ctx.currentTime);
+  o1.stop(ctx.currentTime + 1);
+
+  const g2 = ctx.createGain();
+  g2.gain.value = 0.3;
+  g2.connect(analyser);
+  const o2 = ctx.createOscillator();
+  o2.type = currentWaveform;
+  o2.frequency.value = baseFreq * ratio;
+  o2.connect(g2);
+  o2.start(ctx.currentTime + 1.1);
+  o2.stop(ctx.currentTime + 2.1);
+
+  drawWaveform();
+  setTimeout(() => drawWaveform(), 1100);
+}
+
+// ===== Waveform Drawing =====
+function drawWaveform() {
+  if (!analyser) return;
+  const canvas = document.getElementById('toneWaveform');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  const bufferLength = analyser.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function draw() {
+    if (!isPlaying && !isShiftedPlaying) {
+      ctx.fillStyle = '#0f1118';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = 'rgba(212,168,83,0.2)';
+      ctx.beginPath();
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(w, h / 2);
+      ctx.stroke();
+      return;
+    }
+    requestAnimationFrame(draw);
+    analyser.getByteTimeDomainData(dataArray);
+    ctx.fillStyle = '#0f1118';
+    ctx.fillRect(0, 0, w, h);
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    for (let i = 1; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(0, h * i / 4);
+      ctx.lineTo(w, h * i / 4);
+      ctx.stroke();
+    }
+    // Waveform
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#d4a853';
+    ctx.beginPath();
+    const sliceWidth = w / bufferLength;
+    let x = 0;
+    for (let i = 0; i < bufferLength; i++) {
+      const v = dataArray[i] / 128.0;
+      const y = v * h / 2;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      x += sliceWidth;
+    }
+    ctx.stroke();
+  }
+  draw();
+}
+
+// ===== Microphone Recording =====
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordedBuffer = null;
+let isRecording = false;
+
+async function toggleRecording() {
+  const btn = document.getElementById('recordBtn');
+  if (isRecording) {
+    mediaRecorder.stop();
+    isRecording = false;
+    btn.innerHTML = '<span class="status-dot ready"></span> Record';
+    btn.classList.remove('active');
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const ctx = getAudioContext();
+    mediaRecorder = new MediaRecorder(stream);
+    recordedChunks = [];
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop());
+      const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+      const arrayBuffer = await blob.arrayBuffer();
+      recordedBuffer = await ctx.decodeAudioData(arrayBuffer);
+      document.getElementById('playOrigBtn').disabled = false;
+      document.getElementById('playProcBtn').disabled = false;
+      document.getElementById('stretchSlider').disabled = false;
+      document.getElementById('recPitchSlider').disabled = false;
+      drawRecordedWaveform(recordedBuffer);
+    };
+    mediaRecorder.start();
+    isRecording = true;
+    btn.innerHTML = '<span class="status-dot recording"></span> Stop';
+    btn.classList.add('active');
+    // Auto-stop after 10 seconds
+    setTimeout(() => { if (isRecording) toggleRecording(); }, 10000);
+  } catch (err) {
+    console.error('Microphone error:', err);
+    btn.textContent = 'Mic Access Denied';
+  }
+}
+
+function drawRecordedWaveform(buffer) {
+  const canvas = document.getElementById('recWaveform');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  const data = buffer.getChannelData(0);
+  ctx.fillStyle = '#0f1118';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+  ctx.beginPath(); ctx.moveTo(0, h/2); ctx.lineTo(w, h/2); ctx.stroke();
+  ctx.strokeStyle = '#d4a853';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  const step = Math.ceil(data.length / w);
+  for (let i = 0; i < w; i++) {
+    let min = 1, max = -1;
+    for (let j = 0; j < step; j++) {
+      const d = data[i * step + j] || 0;
+      if (d < min) min = d;
+      if (d > max) max = d;
+    }
+    ctx.moveTo(i, (1 + min) * h / 2);
+    ctx.lineTo(i, (1 + max) * h / 2);
+  }
+  ctx.stroke();
+}
+
+function playOriginal() {
+  if (!recordedBuffer) return;
+  const ctx = getAudioContext();
+  const source = ctx.createBufferSource();
+  source.buffer = recordedBuffer;
+  source.connect(analyser);
+  source.start();
+}
+
+function playProcessed() {
+  if (!recordedBuffer) return;
+  const ctx = getAudioContext();
+  const stretchFactor = parseFloat(document.getElementById('stretchSlider').value);
+  const semitones = parseFloat(document.getElementById('recPitchSlider').value);
+  const pitchRatio = getSemitoneRatio(semitones, 0);
+
+  // Simple granular time-stretch + pitch shift
+  const inputData = recordedBuffer.getChannelData(0);
+  const sr = recordedBuffer.sampleRate;
+  const grainSize = Math.round(sr * 0.04); // 40ms grains
+  const hopA = Math.round(grainSize * 0.25); // analysis hop = 25% of grain
+  const hopS = Math.round(hopA * stretchFactor); // synthesis hop
+  const outputLength = Math.round(inputData.length * stretchFactor / pitchRatio);
+  const outputData = new Float32Array(outputLength);
+
+  // Hann window
+  const hann = new Float32Array(grainSize);
+  for (let i = 0; i < grainSize; i++) {
+    hann[i] = 0.5 * (1 - Math.cos(2 * Math.PI * i / grainSize));
+  }
+
+  let readPos = 0;
+  let writePos = 0;
+  while (readPos + grainSize < inputData.length && writePos + grainSize < outputLength) {
+    for (let i = 0; i < grainSize; i++) {
+      // Apply pitch shift via resampling within grain
+      const srcIdx = readPos + i * pitchRatio;
+      const idx0 = Math.floor(srcIdx);
+      const frac = srcIdx - idx0;
+      let sample = 0;
+      if (idx0 >= 0 && idx0 + 1 < inputData.length) {
+        sample = inputData[idx0] * (1 - frac) + inputData[idx0 + 1] * frac;
+      }
+      if (writePos + i < outputLength) {
+        outputData[writePos + i] += hann[i] * sample;
+      }
+    }
+    readPos += hopA;
+    writePos += hopS;
+  }
+
+  // Normalise
+  let maxAmp = 0;
+  for (let i = 0; i < outputData.length; i++) {
+    if (Math.abs(outputData[i]) > maxAmp) maxAmp = Math.abs(outputData[i]);
+  }
+  if (maxAmp > 0) {
+    for (let i = 0; i < outputData.length; i++) outputData[i] /= maxAmp;
+  }
+
+  const outBuffer = ctx.createBuffer(1, outputData.length, sr);
+  outBuffer.getChannelData(0).set(outputData);
+  const source = ctx.createBufferSource();
+  source.buffer = outBuffer;
+  source.connect(analyser);
+  source.start();
+}
+
+// ===== Live Spectrogram =====
+let spectRunning = false;
+let spectAnimId = null;
+
+function toggleSpectrogram() {
+  const btn = document.getElementById('spectBtn');
+  if (spectRunning) {
+    spectRunning = false;
+    cancelAnimationFrame(spectAnimId);
+    btn.textContent = '▶ Start Spectrogram';
+    btn.classList.remove('active');
+    return;
+  }
+  getAudioContext();
+
+  // Also connect mic to analyser for spectrogram
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    const source = audioCtx.createMediaStreamSource(stream);
+    const spectAnalyser = audioCtx.createAnalyser();
+    spectAnalyser.fftSize = 2048;
+    spectAnalyser.smoothingTimeConstant = 0.7;
+    source.connect(spectAnalyser);
+
+    const canvas = document.getElementById('spectrogramCanvas');
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+    ctx.scale(dpr, dpr);
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    const freqData = new Uint8Array(spectAnalyser.frequencyBinCount);
+
+    ctx.fillStyle = '#0f1118';
+    ctx.fillRect(0, 0, w, h);
+
+    spectRunning = true;
+    btn.textContent = '■ Stop';
+    btn.classList.add('active');
+
+    function drawSpect() {
+      if (!spectRunning) { stream.getTracks().forEach(t => t.stop()); return; }
+      spectAnimId = requestAnimationFrame(drawSpect);
+      spectAnalyser.getByteFrequencyData(freqData);
+
+      // Shift canvas left by 2px
+      const imgData = ctx.getImageData(2 * dpr, 0, (w - 2) * dpr, h * dpr);
+      ctx.putImageData(imgData, 0, 0);
+
+      // Draw new column
+      const binCount = freqData.length;
+      const binsToShow = Math.floor(binCount * 0.4); // Show up to ~8kHz
+      for (let i = 0; i < h; i++) {
+        const binIdx = Math.floor(i / h * binsToShow);
+        const val = freqData[binsToShow - binIdx - 1]; // flip so low freq at bottom
+        const intensity = val / 255;
+        const r = Math.floor(intensity * 212);
+        const g = Math.floor(intensity * 168 + (1 - intensity) * 20);
+        const b = Math.floor((1 - intensity) * 80 + intensity * 83);
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(w - 2, i, 2, 1);
+      }
+    }
+    drawSpect();
+  }).catch(err => {
+    console.error('Mic error for spectrogram:', err);
+    btn.textContent = 'Mic Access Denied';
+  });
+}
+
+// ===== Init waveform canvases =====
+window.addEventListener('load', () => {
+  ['toneWaveform', 'recWaveform', 'spectrogramCanvas'].forEach(id => {
+    const canvas = document.getElementById(id);
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+    ctx.scale(dpr, dpr);
+    ctx.fillStyle = '#0f1118';
+    ctx.fillRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+    ctx.strokeStyle = 'rgba(212,168,83,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.offsetHeight / 2);
+    ctx.lineTo(canvas.offsetWidth, canvas.offsetHeight / 2);
+    ctx.stroke();
+  });
+});
+
+// ===== Smooth scroll for nav links =====
+document.querySelectorAll('nav a').forEach(a => {
+  a.addEventListener('click', (e) => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+</body>
+</html>
