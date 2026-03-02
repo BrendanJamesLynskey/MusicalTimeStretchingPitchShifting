@@ -2,7 +2,7 @@
 
 **An interactive exploration of audio manipulation — from 1940s tape splicing to neural synthesis.**
 
-🔗 **[View the live presentation →](https://yourusername.github.io/time-stretch-pitch-shift/)**
+🔗 **[View the live presentation →](https://brendanjameslynskey.github.io/MusicalTimeStretchingPitchShifting/)**
 
 ![HTML5](https://img.shields.io/badge/HTML5-single--file-E34F26?logo=html5&logoColor=white)
 ![JavaScript](https://img.shields.io/badge/JavaScript-Web%20Audio%20API-F7DF1E?logo=javascript&logoColor=black)
